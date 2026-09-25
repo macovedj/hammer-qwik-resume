@@ -32,3 +32,5 @@ npm run build
 npm run test:smoke
 npm run preview
 ```
+
+`npm run test:smoke` builds the production output, starts a preview server, exercises the production HTTP routes, and shuts the server down. Set `SMOKE_PORT` to override its default loopback port of `4382`.

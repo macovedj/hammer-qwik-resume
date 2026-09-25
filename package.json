@@ -22,7 +22,7 @@
     "preview": "qwik build preview && vite preview --host 0.0.0.0",
     "serve": "vite preview --host 0.0.0.0",
     "start": "vite --host 0.0.0.0 --mode ssr",
-    "test:smoke": "node scripts/smoke.mjs",
+    "test:smoke": "npm run build && node scripts/smoke.mjs",
     "qwik": "qwik"
   },
   "devDependencies": {

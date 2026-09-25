@@ -1,21 +1,40 @@
 import assert from "node:assert/strict";
 import { spawn } from "node:child_process";
 
-const port = 4382;
+const rawPort = process.env.SMOKE_PORT ?? "4382";
+const port = Number(rawPort);
+assert(Number.isInteger(port) && port > 0 && port <= 65535, `Invalid SMOKE_PORT: ${rawPort}`);
 const origin = `http://127.0.0.1:${port}`;
-const server = spawn("npm", ["run", "serve", "--", "--host", "127.0.0.1", "--port", String(port)], {
-  stdio: ["ignore", "pipe", "pipe"],
-});
+const server = spawn(
+  "npm",
+  ["run", "serve", "--", "--host", "127.0.0.1", "--port", String(port), "--strictPort"],
+  { stdio: ["ignore", "pipe", "pipe"] },
+);
+let serverLog = "";
+let serverSpawnError;
+server.stdout.on("data", (chunk) => (serverLog += chunk));
+server.stderr.on("data", (chunk) => (serverLog += chunk));
+server.on("error", (error) => (serverSpawnError = error));
+
+function startupError(message) {
+  const log = serverLog.trim();
+  return new Error(log ? `${message}\n${log}` : message);
+}
 
 async function waitForServer() {
   for (let attempt = 0; attempt < 60; attempt++) {
+    if (serverSpawnError) throw startupError(`Failed to start the fixture server: ${serverSpawnError.message}`);
+    if (server.exitCode !== null || server.signalCode !== null) {
+      const status = server.exitCode !== null ? `code ${server.exitCode}` : `signal ${server.signalCode}`;
+      throw startupError(`Fixture server exited early with ${status}.`);
+    }
     try {
       const response = await fetch(origin);
       if (response.ok) return;
     } catch {}
     await new Promise((resolve) => setTimeout(resolve, 100));
   }
-  throw new Error("Timed out waiting for the fixture server");
+  throw startupError("Timed out waiting for the fixture server.");
 }
 
 try {
