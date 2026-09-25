@@ -2,6 +2,11 @@
 
 A deterministic Qwik City fixture for testing SSR, serialized state, lazy event loading, and resumability in browser-hosted development environments such as edit-test.dev.
 
+## Requirements
+
+- Node.js 22.12 or newer
+- npm
+
 ## Coverage
 
 - Qwik City SSR and resumable interaction
